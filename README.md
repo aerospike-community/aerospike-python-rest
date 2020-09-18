@@ -64,3 +64,12 @@ View test coverage from root directory:
 ```
 coverage run --source=aerospike_rest/ -m unittest -v -b && coverage report
 ```
+
+
+Release
+--------------------------------------------------------------------------------
+
+1. Create version branch: `git checkout -b version/v1.0.0`)
+2. Bump version in `aerospike_rest/__init__.py` and commit the change
+3. Tag the commit: `git tag -a v1.0.0 -m 'Release v1.0.0`
+4. Submit PR
