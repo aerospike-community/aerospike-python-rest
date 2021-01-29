@@ -26,7 +26,7 @@ class AerospikeRestApi(object):
         if base_url[0:4] == "http":
             self.base_url = self.base_url
         else:
-            self.base_url = "http://" + self.base_url
+            self.base_url = "https://" + self.base_url
 
         self.authorization = authorization
         self.client_compression = client_compression
