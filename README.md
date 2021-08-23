@@ -12,7 +12,7 @@ Provides a simple convenience wrapper around [requests](https://requests.readthe
 
 ### Simple Example
 
-```python
+``` python
 from aerospike_rest.api import AerospikeRestApi
 
 api = AerospikeRestApi('http://localhost:8080/v1')
@@ -22,7 +22,7 @@ api.post('/kvs/mynamespace/myset/mykey', bins)
 
 ### Advanced Example
 
-```python
+``` python
 from aerospike_rest.api import AerospikeRestApi
 from aerospike_rest.exceptions import AerospikeRestApiError
 
