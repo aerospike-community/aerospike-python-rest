@@ -52,9 +52,9 @@ class TestAerospikeRestApi(TestCase):
         """
         AerospikeRestApi enforces scheme and strips trailing slash.
         """
-        expected_url = 'http://foo'
+        expected_url = 'https://foo'
 
-        api = AerospikeRestApi('http://foo/')
+        api = AerospikeRestApi('https://foo/')
         self.assertEqual(api.base_url, expected_url)
 
         api = AerospikeRestApi('foo/')
