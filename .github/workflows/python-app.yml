@@ -8,11 +8,13 @@ on:
     branches:
     - master
     - main
+    - dev
     - version/*
   pull_request:
     branches:
     - master
     - main
+    - dev
     - version/*
 
 jobs:
