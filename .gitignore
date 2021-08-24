@@ -21,3 +21,5 @@ distribute-*
 .*venv
 
 .coverage
+
+.idea
