@@ -85,7 +85,7 @@ class AerospikeRestApi(object):
 
         try:
             json = response.json()
-            if response.status_code in (404, 403, 409):
+            if response.status_code >= 400:
                 raise AerospikeRestApiError(json, response.status_code)
             return json
         except ValueError:
