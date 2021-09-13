@@ -42,8 +42,16 @@ jobs:
     - name: Test with python unittest
       run: |
         python -m unittest -v -b
-    - name: Distribute to pypi
-      if: ${{ github.event_name == 'pull_request' }} # && github.ref == 'refs/heads/main' }}
+    - name: Distribute to test pypi
+      if: ${{ github.event_name == 'pull_request' }}
+      run: |
+        TEST_PYPI="True"
+        set | grep TEST_PYPI
+        export TEST_PYPI
+        python -m build
+        python -m twine upload --repository-url https://test.pypi.org/legacy/ -u __token__ -p ${{ secrets.TEST_PYPI_AEROSPIKE_TOKEN }} dist/* --verbose
+    - name: Distribute to official pypi
+      if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
       run: |
         python -m build
         python -m twine upload --repository-url https://upload.pypi.org/legacy/ -u __token__ -p ${{ secrets.PYPI_AEROSPIKE_TOKEN }} dist/* --verbose
