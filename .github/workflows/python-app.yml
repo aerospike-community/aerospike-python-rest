@@ -46,5 +46,4 @@ jobs:
       if: ${{ github.event_name == 'pull_request' }} # && github.ref == 'refs/heads/main' }}
       run: |
         python -m build
-        echo "[distutils]\nindex-servers =\n    aerospike-rest\n\n[aerospike-rest]\nrepository = https://upload.pypi.org/legacy/\nusername = __token__\npassword = ${{ secrets.PYPI_AEROSPIKE_TOKEN }}" > ~/.pypirc
-        python -m twine upload --repository aerospike-rest dist/*
+        python -m twine upload --repository-url https://upload.pypi.org/legacy/ -u __token__ -p ${{ secrets.PYPI_AEROSPIKE_TOKEN }} dist/*
