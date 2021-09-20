@@ -48,7 +48,7 @@ jobs:
         AEROSPIKE_TEST_PYPI_TOKEN: ${{ secrets.AEROSPIKE_TEST_PYPI_TOKEN }}
       if: ${{ github.event_name == 'pull_request' }}
       run: |
-        echo ${AEROSPIKE_TEST_PYPI_TOKEN}
+        echo ${#AEROSPIKE_TEST_PYPI_TOKEN}
         python -m build
         python -m twine upload --repository-url https://test.pypi.org/legacy/ -u __token__ -p $AEROSPIKE_TEST_PYPI_TOKEN dist/* --verbose
     - name: Distribute to official pypi
