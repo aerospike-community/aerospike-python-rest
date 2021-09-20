@@ -21,6 +21,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    environment: pypi-env
 
     steps:
     - uses: actions/checkout@v2
