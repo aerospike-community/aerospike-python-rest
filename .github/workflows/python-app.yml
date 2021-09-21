@@ -19,7 +19,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     environment: pypi-env
 
@@ -43,7 +42,7 @@ jobs:
     - name: Test with python unittest
       run: |
         python -m unittest -v -b
-    - name: Distribute to test pypi
+    - name: Distribute to pypi test
       env:
         AEROSPIKE_TEST_PYPI_TOKEN: ${{ secrets.AEROSPIKE_TEST_PYPI_TOKEN }}
       if: ${{ github.event_name == 'pull_request' }}
