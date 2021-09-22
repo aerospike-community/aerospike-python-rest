@@ -83,14 +83,9 @@ class AerospikeRestApi(object):
         content = response.content.decode("utf-8")
         logger.debug("Body:\n{}".format(content or "<EMPTY BODY>"))
 
-        try:
-            json = response.json()
-            if response.status_code in (404, 403, 409):
-                raise AerospikeRestApiError(json, response.status_code)
-            return json
-        except ValueError:
-            # The response was not valid JSON (empty body, 5xx errors, etc.)
-            response.raise_for_status()
+        json = self.json_from_response(response)
+
+        return json
 
 
     def get(self, path, body=None, params=None, headers=None, timeout=30):
@@ -181,3 +176,13 @@ class AerospikeRestApi(object):
         """
         return self.request(self.session.patch, path, body, params, headers,
                             timeout)
+
+    def json_from_response(self, response):
+        try:
+            json = response.json()
+            if response.status_code >= 400:
+                raise AerospikeRestApiError(json, response.status_code)
+            return json
+        except ValueError:
+            # The response was not valid JSON (empty body, 5xx errors, etc.)
+            response.raise_for_status()

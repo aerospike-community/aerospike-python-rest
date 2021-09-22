@@ -19,8 +19,8 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    environment: pypi-env
 
     steps:
     - uses: actions/checkout@v2
@@ -42,3 +42,18 @@ jobs:
     - name: Test with python unittest
       run: |
         python -m unittest -v -b
+    - name: Distribute to pypi test
+      env:
+        AEROSPIKE_TEST_PYPI_TOKEN: ${{ secrets.AEROSPIKE_TEST_PYPI_TOKEN }}
+      if: ${{ github.event_name != 'pull_request' && !(github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') }}
+      run: |
+        echo ${#AEROSPIKE_TEST_PYPI_TOKEN}
+        python -m build
+        python -m twine upload --repository-url https://test.pypi.org/legacy/ -u __token__ -p $AEROSPIKE_TEST_PYPI_TOKEN dist/* --verbose
+    - name: Distribute to official pypi
+      env:
+        AEROSPIKE_PYPI_TOKEN: ${{ secrets.AEROSPIKE_PYPI_TOKEN }}
+      if: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') }}
+      run: |
+        python -m build
+        python -m twine upload --repository-url https://upload.pypi.org/legacy/ -u __token__ -p $AEROSPIKE_PYPI_TOKEN dist/* --verbose
