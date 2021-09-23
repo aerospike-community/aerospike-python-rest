@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+from datetime import datetime
 from setuptools import setup, find_packages
 
 def read(fname):
@@ -8,9 +9,14 @@ def read(fname):
 
 import aerospike_rest
 
+version = '{}{}'.format(
+    aerospike_rest.get_version(),
+    'b{}'.format(datetime.now().strftime("%Y%m%d%H%M%S")) if os.getenv('TEST_PYPI', '') else ''
+)
+
 setup(
     name = aerospike_rest.NAME,
-    version = aerospike_rest.get_version(),
+    version = version,
     description = "Python interface to Aerospike REST Client",
     url = "https://github.com/aerospike-community/aerospike-python-rest",
     long_description = read("README.md"),

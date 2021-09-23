@@ -2,7 +2,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from copy import deepcopy
-from requests.exceptions import RequestException
+from requests.exceptions import HTTPError
 from json.decoder import JSONDecodeError
 
 from aerospike_rest import NAME, get_version
@@ -20,7 +20,7 @@ class TestAerospikeRestApi(TestCase):
     )
 
     default_headers = {
-        'User-Agent': "{}/{}".format(NAME, get_version()), 
+        'User-Agent': "{}/{}".format(NAME, get_version()),
         'Accept-Encoding': 'gzip'
     }
 
@@ -44,31 +44,30 @@ class TestAerospikeRestApi(TestCase):
         }
 
         api = AerospikeRestApi(**kwargs)
-        for k,v in kwargs.items():
+        for k, v in kwargs.items():
             self.assertEqual(getattr(api, k), v)
-
 
     def test_url_sanitization(self):
         """
         AerospikeRestApi enforces scheme and strips trailing slash.
         """
-        expected_url = 'http://foo'
+        expected_url = 'https://foo'
 
-        api = AerospikeRestApi('http://foo/')
+        api = AerospikeRestApi('https://foo/')
         self.assertEqual(api.base_url, expected_url)
 
         api = AerospikeRestApi('foo/')
         self.assertEqual(api.base_url, expected_url)
-
 
     def test_method_wrappers(self):
         """
         AerospikeRestApi HTTP method wrappers map to requests.session functions.
         """
         api = AerospikeRestApi('http://foo')
-        
+
         for patch_method, api_method in self.wrapper_methods:
             with patch(patch_method) as mock:
+                mock.return_value.status_code = 200
                 getattr(api, api_method)('/bar')
                 mock.assert_called_once()
 
@@ -93,7 +92,6 @@ class TestAerospikeRestApi(TestCase):
                 json = getattr(api, api_method)("/bar")
                 self.assertEqual(json, self._mock_client_success_response())
 
-
     def _mock_client_error_response(self):
         return {
             "inDoubt": True,
@@ -117,7 +115,6 @@ class TestAerospikeRestApi(TestCase):
                     api.get("/bar")
                 self.assertEqual(cm.exception.status_code, status_code)
 
-
     def _mock_json_decode_error(self):
         raise JSONDecodeError('test message', 'doc', 1)
 
@@ -136,8 +133,7 @@ class TestAerospikeRestApi(TestCase):
                 api.get("/bar")
                 obj.raise_for_status.assert_called()
 
-
-    def _success_called_with(self, api, headers=None, params=None, 
+    def _success_called_with(self, api, headers=None, params=None,
                              timeout=30):
         """
         Helper method to test successful requests get called a certain way
@@ -151,7 +147,7 @@ class TestAerospikeRestApi(TestCase):
 
                 getattr(api, api_method)("/bar", headers=headers, params=params,
                                          timeout=timeout)
-                
+
                 all_headers = deepcopy(self.default_headers)
                 all_headers['User-Agent'] = api.user_agent
                 if headers:
@@ -170,10 +166,9 @@ class TestAerospikeRestApi(TestCase):
                 if not timeout:
                     timeout = self.default_timeout
 
-                mock.assert_called_with("http://foo/bar", headers=all_headers, 
+                mock.assert_called_with("http://foo/bar", headers=all_headers,
                                         params=all_params, json=None,
                                         timeout=(api.connect_timeout, timeout))
-
 
     def test_optional_headers(self):
         """
@@ -182,14 +177,12 @@ class TestAerospikeRestApi(TestCase):
         api = AerospikeRestApi('http://foo')
         self._success_called_with(api, headers={"Foo": "Bar"})
 
-
     def test_optional_params(self):
         """
         AerospikeRestApi should override default params with arg params
         """
         api = AerospikeRestApi('http://foo')
         self._success_called_with(api, params={"Foo": "Bar"})
-
 
     def test_optional_timeout(self):
         """
@@ -198,7 +191,6 @@ class TestAerospikeRestApi(TestCase):
         api = AerospikeRestApi('http://foo')
         api.connect_timeout = 999
         self._success_called_with(api, timeout=999)
-
 
     def test_optional_compression(self):
         """
@@ -209,7 +201,6 @@ class TestAerospikeRestApi(TestCase):
         api.http_compression = False
         self._success_called_with(api)
 
-
     def test_optional_authorization(self):
         """
         AerospikeRestApi should allow optional authorization header
@@ -218,7 +209,6 @@ class TestAerospikeRestApi(TestCase):
         api.authorization = 'Basic abcdefg='
         self._success_called_with(api)
 
-
     def test_optional_user_agent(self):
         """
         AerospikeRestApi should allow optional user-agent
@@ -226,3 +216,33 @@ class TestAerospikeRestApi(TestCase):
         api = AerospikeRestApi('http://foo')
         api.user_agent = 'bar'
         self._success_called_with(api)
+
+    def test_json_from_response_valid(self):
+        mock_response = MagicMock()
+        expected_json = "\"valid json\""
+        attrs = {'json.return_value': expected_json, 'status_code': 200}
+        mock_response.configure_mock(**attrs)
+
+        api = AerospikeRestApi('http://foo')
+        actual_json = api.json_from_response(mock_response)
+
+        self.assertEqual(actual_json, expected_json)
+
+    def test_json_from_response_400_error(self):
+        mock_response = MagicMock()
+        expected_json = {'message': 'valid json', 'inDoubt': 'valid json', 'internalErrorCode': 'valid json'}
+        attrs = {'json.return_value': expected_json, 'status_code': 400}
+        mock_response.configure_mock(**attrs)
+
+        api = AerospikeRestApi('http://foo')
+        with self.assertRaises(AerospikeRestApiError):
+            api.json_from_response(mock_response)
+
+    def test_json_from_response_no_json_value_error(self):
+        mock_response = MagicMock()
+        attrs = {'json.side_effect': ValueError, 'raise_for_status.side_effect': HTTPError, 'status_code': 500}
+        mock_response.configure_mock(**attrs)
+
+        api = AerospikeRestApi('http://foo')
+        with self.assertRaises(HTTPError):
+            api.json_from_response(mock_response)
