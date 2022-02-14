@@ -1,13 +1,13 @@
+import json
+
 
 class AerospikeRestApiError(Exception):
     def __init__(self, http_response, status_code):
-        self.message = http_response['message']
-        self.in_doubt = http_response['inDoubt']
         self.status_code = status_code
-        self.code = http_response['internalErrorCode']
-    
+        self.response = json.dumps(http_response)
+
     def __str__(self):
-        return "{} {}".format(self.status_code, self.message)
+        return "{} {}".format(self.status_code, self.response)
 
 
 # error codes from Java client:
